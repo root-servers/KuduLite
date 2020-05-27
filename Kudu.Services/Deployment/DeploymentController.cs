@@ -382,7 +382,9 @@ namespace Kudu.Services.Deployment
 
             using (_tracer.Step("DeploymentService.GetCurrentEtag"))
             {
+                using (_tracer.Step("Before DeploymentService.GetCurrentEtag")) { }
                 currentEtag = GetCurrentEtag(Request);
+                using (_tracer.Step("After DeploymentService.GetCurrentEtag")) { }
                 _tracer.Trace("Current Etag: {0}, Cached Etag: {1}", currentEtag, cachedDeployments.Etag);
             }
 
@@ -585,6 +587,13 @@ namespace Kudu.Services.Deployment
 
         private EntityTagHeaderValue GetCurrentEtag(HttpRequest request)
         {
+            using (_tracer.Step("Trying to get path and query hash")) { }
+            using (_tracer.Step(request.GetDisplayUrl())) { }
+            using (_tracer.Step("done. Trying to get last modified time")) { }
+            using (_tracer.Step("Last mod time : "+ _status.LastModifiedTime)) { }
+            using (_tracer.Step("Last mod time ticks : " + _status.LastModifiedTime.Ticks)) { }
+            using (_tracer.Step("Done.")) { }
+
             return new EntityTagHeaderValue(String.Format("\"{0:x}\"", new Uri(request.GetDisplayUrl()).PathAndQuery.GetHashCode() ^ _status.LastModifiedTime.Ticks));
         }
 
