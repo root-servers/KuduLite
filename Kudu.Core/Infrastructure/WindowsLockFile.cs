@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Kudu.Contracts.Infrastructure;
@@ -146,7 +144,10 @@ namespace Kudu.Core.Infrastructure
             {
 
                 FileSystemHelpers.EnsureDirectory(Path.GetDirectoryName(_path));
-
+                if (FileSystemHelpers.FileExists(_path))
+                {
+                    return false;
+                }
                 lockStream = FileSystemHelpers.OpenFile(_path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
 
                 WriteLockInfo(operationName, lockStream);
@@ -288,16 +289,13 @@ namespace Kudu.Core.Infrastructure
         {
             // Only clean up lock on Windows Env
             // When running on Mono with SMB share, delete action would cause wierd behavior on later OpenWrite action if a file has already been opened by another process
-            if (OSDetector.IsOnWindows())
+            try
             {
-                try
-                {
-                    FileSystemHelpers.DeleteFile(_path);
-                }
-                catch (Exception ex)
-                {
-                    TraceIfUnknown(ex);
-                }
+                FileSystemHelpers.DeleteFile(_path);
+            }
+            catch (Exception ex)
+            {
+                TraceIfUnknown(ex);
             }
         }
 
